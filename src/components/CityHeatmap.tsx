@@ -1,83 +1,98 @@
-import React, { useEffect, useState } from 'react';
-import { Shield, Activity, Crosshair, Radar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Radar, Crosshair } from 'lucide-react';
+
+// FIX FOR LEAFLET MARKER ICONS
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+const DefaultIcon = L.icon({
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const createPulsingIcon = (risk: string) => {
+    const color = risk === 'Critical' ? '#f43f5e' : risk === 'High' ? '#f59e0b' : '#3b82f6';
+    return L.divIcon({
+        className: 'custom-pulsing-marker',
+        html: `
+            <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                <div style="position: absolute; width: 35px; height: 35px; background-color: ${color}; border-radius: 50%; animation: pulse-marker 2s infinite; opacity: 0.4;"></div>
+                <div style="width: 12px; height: 12px; background-color: ${color}; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 15px ${color}80;"></div>
+            </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+    });
+};
 
 export const CityHeatmap = () => {
-    const [scannedPoints, setScannedPoints] = useState<{ x: number, y: number, id: number, label: string }[]>([]);
+    const position: [number, number] = [19.0473, 72.8634];
+    const [hotspots] = useState([
+        { id: 1, pos: [19.0480, 72.8640], label: "BNS §111: Organized Crime Hub", risk: "Critical" },
+        { id: 2, pos: [19.0430, 72.8590], label: "BNS §303: Larceny Cluster", risk: "High" },
+        { id: 3, pos: [19.0520, 72.8700], label: "BNS §103: Inquiry Zone", risk: "Medium" },
+    ]);
 
+    const [isMounted, setIsMounted] = useState(false);
     useEffect(() => {
-        const sections = ['111', '303', '70', '103', '115'];
-        const interval = setInterval(() => {
-            setScannedPoints(prev => {
-                const newPoints = [...prev, {
-                    x: Math.random() * 80 + 10,
-                    y: Math.random() * 80 + 10,
-                    id: Date.now(),
-                    label: `BNS §${sections[Math.floor(Math.random() * sections.length)]}`
-                }];
-                return newPoints.slice(-8);
-            });
-        }, 3000);
-        return () => clearInterval(interval);
+        setIsMounted(true);
     }, []);
 
+    // Explicit height is CRITICAL for Leaflet
+    const mapContainerStyle = {
+        height: '550px',
+        width: '100%',
+        backgroundColor: '#020617'
+    };
+
+    if (!isMounted) {
+        return <div style={{ height: '550px', width: '100%' }} className="bg-[#020617] animate-pulse rounded-2xl border border-slate-800" />;
+    }
+
     return (
-        <div className="w-full h-full min-h-[550px] bg-[#020617] relative overflow-hidden border border-slate-800 rounded-2xl group shadow-2xl">
-            {/* Real Intelligence Hub - User Provided Map Background */}
-            <div className="absolute inset-0 z-0">
-                {/* 
-                    The image is loaded from /src/map.jpg. 
-                    Object-fit cover ensures it scales in accordance to the window/container size.
-                */}
-                <img
-                    src="/src/map.jpg"
-                    alt="Strategic Map"
-                    className="w-full h-full object-cover opacity-50 mix-blend-luminosity grayscale contrast-125 transition-transform duration-1000 group-hover:scale-105"
-                    onError={(e) => {
-                        // Fallback in case map.jpg is not yet present, trying jpeg
-                        const target = e.target as HTMLImageElement;
-                        if (!target.src.includes('map.jpeg')) {
-                            target.src = '/src/map.jpeg';
-                        } else {
-                            target.style.display = 'none';
-                        }
-                    }}
+        <div className="w-full relative bg-[#020617] rounded-2xl overflow-hidden shadow-2xl border border-slate-800">
+            <MapContainer
+                center={position}
+                zoom={14}
+                style={mapContainerStyle}
+                zoomControl={true}
+                attributionControl={false}
+                scrollWheelZoom={true}
+                doubleClickZoom={true}
+            >
+                <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                 />
 
-                {/* Advanced Grid & Vignette for Premium Look */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-[#020617] opacity-60" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#020617] via-transparent to-[#020617] opacity-60" />
-
-                {/* Scanning Line Effect */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="w-full h-[2px] bg-blue-500/20 absolute top-0 animate-[scan-vertical_4s_linear_infinite]" />
-                </div>
-            </div>
-
-            {/* Dynamic UI Elements */}
-            <div className="absolute inset-0 z-10 pointer-events-none">
-                {scannedPoints.map(point => (
-                    <div
-                        key={point.id}
-                        className="absolute w-4 h-4 flex items-center justify-center -translate-x-1/2 -translate-y-1/2"
-                        style={{ left: `${point.x}%`, top: `${point.y}%` }}
+                {hotspots.map(spot => (
+                    <Marker
+                        key={spot.id}
+                        position={spot.pos as [number, number]}
+                        icon={createPulsingIcon(spot.risk)}
                     >
-                        <div className="absolute inset-0 bg-rose-500 rounded-full animate-ping opacity-40" />
-                        <div className="w-2 h-2 bg-rose-500 rounded-full shadow-[0_0_15px_#f43f5e]" />
-
-                        <div className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-950/90 border border-slate-800 px-3 py-1.5 rounded-lg text-[9px] font-black text-slate-100 backdrop-blur-md shadow-2xl">
-                            {point.label}
-                        </div>
-                    </div>
+                        <Popup className="custom-popup">
+                            <div className="p-2 min-w-[150px]">
+                                <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Target Intelligence</h3>
+                                <p className="text-xs font-bold leading-tight text-slate-200">{spot.label}</p>
+                            </div>
+                        </Popup>
+                    </Marker>
                 ))}
-            </div>
+            </MapContainer>
 
-            {/* Premium Overlays */}
-            <div className="absolute top-8 left-8 z-20 flex flex-col gap-4">
-                <div className="bg-slate-950/80 backdrop-blur-xl border border-slate-800 p-5 rounded-2xl shadow-2xl">
+            {/* Overlays */}
+            <div className="absolute top-8 left-8 z-[1000] pointer-events-none">
+                <div className="bg-slate-950/80 backdrop-blur-xl border border-slate-800 p-5 rounded-2xl shadow-2xl border-l-4 border-l-blue-500">
                     <div className="flex items-center gap-4">
                         <Radar className="w-6 h-6 text-blue-500 animate-spin-slow" />
                         <div>
-                            <span className="text-[10px] font-black tracking-[0.2em] text-slate-200 uppercase">Live Intelligence Feed</span>
+                            <span className="text-[10px] font-black tracking-[0.2em] text-slate-200 uppercase text-xs">Live Intelligence Hub</span>
                             <div className="flex items-center gap-2 mt-1">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 <span className="text-[9px] text-slate-500 font-bold uppercase">Sector: Mumbai-Sion Strategic</span>
@@ -87,40 +102,60 @@ export const CityHeatmap = () => {
                 </div>
             </div>
 
-            <div className="absolute bottom-8 left-8 right-8 z-20 flex justify-between items-end">
-                <div className="bg-slate-950/90 border border-slate-800 p-5 rounded-2xl backdrop-blur-xl max-w-sm shadow-2xl">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Crosshair className="w-4 h-4 text-rose-500" />
-                        <span className="text-[10px] font-black text-slate-200 uppercase tracking-widest">Signal Trace</span>
-                    </div>
-                    <p className="text-[10px] leading-relaxed text-slate-400 font-medium italic">
-                        "Visualizing BNS §111 & §303 hotspots directly over the Kurla-Sion corridor. System is scaling to fit window geometry."
-                    </p>
-                </div>
-
-                <div className="bg-slate-950/80 p-2 rounded-xl border border-slate-800 flex gap-4">
-                    <div className="text-center px-4">
-                        <div className="text-sm font-black text-blue-500 italic">BKC_NODE_01</div>
-                        <div className="text-[8px] text-slate-600 font-bold uppercase mt-0.5">Primary Link</div>
-                    </div>
-                </div>
-            </div>
+            <MapEffects />
 
             <style>{`
-                @keyframes scan-vertical {
-                    0% { top: 0%; opacity: 0; }
-                    10% { opacity: 1; }
-                    90% { opacity: 1; }
-                    100% { top: 100%; opacity: 0; }
-                    }
-                .animate-spin-slow {
-                    animation: spin 12s linear infinite;
+                .animate-spin-slow { animation: spin 12s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                @keyframes pulse-marker {
+                    0% { transform: scale(0.5); opacity: 0.8; }
+                    100% { transform: scale(2); opacity: 0; }
                 }
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
+                .leaflet-container { background: #020617 !important; outline: none; }
+                .custom-popup .leaflet-popup-content-wrapper {
+                    background: #020617 !important;
+                    color: #fff !important;
+                    border: 1px solid #1e293b !important;
+                    border-radius: 8px;
                 }
+                .custom-popup .leaflet-popup-tip { background: #1e293b !important; }
+
+                /* Custom Zoom Control Styling */
+                .leaflet-control-zoom {
+                    border: 1px solid #1e293b !important;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+                    margin-top: 150px !important; /* Move it down below the overlay */
+                    margin-left: 32px !important;
+                }
+                .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+                    background-color: #020617 !important;
+                    color: #64748b !important;
+                    border: none !important;
+                    border-bottom: 1px solid #1e293b !important;
+                    transition: all 0.2s ease;
+                }
+                .leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
+                    background-color: #0f172a !important;
+                    color: #3b82f6 !important;
+                }
+                .leaflet-bar { border: none !important; }
             `}</style>
         </div>
     );
 };
+
+const MapEffects = () => (
+    <div className="absolute inset-0 z-[400] pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:30px_30px]" />
+        <div className="w-full h-[1px] bg-blue-500/20 absolute top-0 animate-scanning" />
+        <style>{`
+            @keyframes animate-scanning {
+                0% { top: 0%; opacity: 0; }
+                15% { opacity: 1; }
+                85% { opacity: 1; }
+                100% { top: 100%; opacity: 0; }
+            }
+            .animate-scanning { animation: animate-scanning 4s linear infinite; }
+        `}</style>
+    </div>
+);

@@ -51,13 +51,13 @@ function App() {
 
     return (
         <div className="flex h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans selection:bg-blue-500/30">
-            <Sidebar />
+            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
             <main className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
                 <header className="h-16 border-b border-slate-800 bg-[#020617]/80 backdrop-blur-xl px-8 flex items-center justify-between z-20 shrink-0">
                     <div className="flex items-center gap-8">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('COMMAND')}>
                             <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center shadow-lg shadow-blue-500/20">
                                 <Shield className="w-5 h-5 text-white" />
                             </div>
@@ -65,18 +65,22 @@ function App() {
                         </div>
 
                         <nav className="flex gap-2">
-                            {['COMMAND', 'ANALYTICS', 'RESOURCES'].map((tab) => (
+                            {[
+                                { id: 'COMMAND', label: 'COMMAND' },
+                                { id: 'ANALYTICS', label: 'ANALYTICS' },
+                                { id: 'RESOURCES', label: 'RESOURCES' }
+                            ].map((tab) => (
                                 <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
                                     className={cn(
                                         "text-[10px] font-black tracking-widest px-4 py-1.5 rounded-full transition-all border",
-                                        activeTab === tab
+                                        activeTab === tab.id
                                             ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/10"
                                             : "text-slate-500 border-transparent hover:text-slate-300 hover:bg-slate-900"
                                     )}
                                 >
-                                    {tab}
+                                    {tab.label}
                                 </button>
                             ))}
                         </nav>
@@ -98,7 +102,7 @@ function App() {
                     {activeTab === 'COMMAND' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
                             {/* GIS Heatmap Overlay */}
-                            <div className="w-full min-h-[550px] rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900/10">
+                            <div className="w-full">
                                 <CityHeatmap />
                             </div>
 
@@ -138,10 +142,13 @@ function App() {
                         </div>
                     )}
 
+                    {activeTab === 'SIGNAL' && <BNSIntelligenceHub />}
+                    {activeTab === 'RISK' && <PredictiveRiskCalculator />}
                     {activeTab === 'ANALYTICS' && <AnalyticsPage />}
                     {activeTab === 'RESOURCES' && <ResourcesPage />}
                 </div>
             </main>
+
 
             <style>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 4px; }

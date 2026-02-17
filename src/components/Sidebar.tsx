@@ -1,13 +1,26 @@
 import React, { useState } from 'react';
-import { Map, Zap, Bell, Shield, AlertTriangle, Radar, Info, ChevronRight, Activity, Target } from 'lucide-react';
+import { Map, Zap, Bell, Shield, AlertTriangle, Radar, Info, ChevronRight, Activity, Target, MapPin } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export const Sidebar = () => {
+interface SidebarProps {
+    activeTab: string;
+    setActiveTab: (tab: string) => void;
+}
+
+export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
     const alerts = [
         { id: 1, type: 'NIA', msg: 'Pattern: Aggressive BNS 111 activity in Nagpur South', icon: Shield, color: 'text-amber-500', time: '12m ago' },
         { id: 2, type: 'CBI', msg: 'Expected Hotspot: Sector 14 Financial Hub (Next 6h)', icon: Radar, color: 'text-blue-500', time: '24m ago' },
         { id: 3, type: 'LOCAL', msg: 'BNS 103 inquiry launched in Zone 2', icon: AlertTriangle, color: 'text-rose-500', time: '1h ago' },
         { id: 4, type: 'RAW', msg: 'Border-adjacent digital traces identified', icon: Activity, color: 'text-emerald-500', time: '2h ago' },
+    ];
+
+    const navItems = [
+        { icon: Activity, label: "Live Surveillance", id: 'COMMAND' },
+        { icon: Radar, label: "Signal Intelligence", id: 'SIGNAL' },
+        { icon: Target, label: "High-Risk Targets", id: 'RISK' },
+        { icon: Shield, label: "Asset Management", id: 'RESOURCES' },
+        { icon: MapPin, label: "Advanced Analytics", id: 'ANALYTICS' },
     ];
 
     return (
@@ -21,10 +34,15 @@ export const Sidebar = () => {
 
                 {/* Secondary Navigation */}
                 <div className="space-y-1">
-                    <NavItem icon={Activity} label="Live Surveillance" active />
-                    <NavItem icon={Radar} label="Signal Intelligence" />
-                    <NavItem icon={Target} label="High-Risk Targets" />
-                    <NavItem icon={Shield} label="Asset Management" />
+                    {navItems.map((item) => (
+                        <NavItem
+                            key={item.id}
+                            icon={item.icon}
+                            label={item.label}
+                            active={activeTab === item.id}
+                            onClick={() => setActiveTab(item.id)}
+                        />
+                    ))}
                 </div>
             </div>
 
@@ -91,14 +109,18 @@ export const Sidebar = () => {
     );
 };
 
-const NavItem = ({ icon: Icon, label, active }: any) => (
-    <div className={cn(
-        "flex items-center gap-3 p-3 rounded-xl transition-all duration-300 cursor-pointer group",
-        active ? "bg-blue-600/10 border border-blue-600/20" : "hover:bg-slate-900/50 border border-transparent"
-    )}>
+const NavItem = ({ icon: Icon, label, active, onClick }: any) => (
+    <div
+        onClick={onClick}
+        className={cn(
+            "flex items-center gap-3 p-3 rounded-xl transition-all duration-300 cursor-pointer group",
+            active ? "bg-blue-600/10 border border-blue-600/20" : "hover:bg-slate-900/50 border border-transparent"
+        )}
+    >
         <Icon className={cn("w-4 h-4 transition-colors", active ? "text-blue-500" : "text-slate-600 group-hover:text-slate-400")} />
         <span className={cn("text-[11px] font-black uppercase tracking-widest transition-colors", active ? "text-slate-200" : "text-slate-500 group-hover:text-slate-300")}>
             {label}
         </span>
     </div>
 );
+
