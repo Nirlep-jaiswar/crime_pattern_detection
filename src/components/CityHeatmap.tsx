@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Radar, Crosshair, MapPin, Zap, Activity, Shield, Target, AlertTriangle } from 'lucide-react';
+import { Radar, Crosshair, MapPin, Zap, Activity, Shield, Target, AlertTriangle, Maximize, Minimize } from 'lucide-react';
 import { MapLayerSelector } from './MapLayerSelector';
 import Loader from './Loader';
 
@@ -103,6 +103,30 @@ export const CityHeatmap = ({ darkMode = true }: CityHeatmapProps) => {
     const [predictiveZones, setPredictiveZones] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [map, setMap] = useState<L.Map | null>(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const toggleFullscreen = () => {
+        if (!containerRef.current) return;
+
+        if (!document.fullscreenElement) {
+            containerRef.current.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+            setIsFullscreen(true);
+        } else {
+            document.exitFullscreen();
+            setIsFullscreen(false);
+        }
+    };
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
 
     const handleZoomIn = () => map?.zoomIn();
     const handleZoomOut = () => map?.zoomOut();
@@ -149,7 +173,7 @@ export const CityHeatmap = ({ darkMode = true }: CityHeatmapProps) => {
     }, []);
 
     const mapContainerStyle = {
-        height: '620px',
+        height: isFullscreen ? '100vh' : '600px',
         width: '100%',
         backgroundColor: darkMode ? '#000000' : '#f8fafc'
     };
@@ -167,9 +191,10 @@ export const CityHeatmap = ({ darkMode = true }: CityHeatmapProps) => {
         : "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png";
 
     return (
-        <div className="w-full relative bg-app-background rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.3)] border border-app-border group">
+        <div ref={containerRef} className={`relative w-full rounded-2xl overflow-hidden border border-app-border bg-app-card transition-all duration-500 ${isFullscreen ? "fixed inset-0 z-[9999] rounded-none" : "h-[600px]"
+            }`}>
             <MapContainer
-                key={darkMode ? 'dark-map' : 'light-map'}
+                key={darkMode ? `dark-map-${isFullscreen}` : `light-map-${isFullscreen}`}
                 center={position}
                 zoom={14}
                 style={mapContainerStyle}
@@ -305,6 +330,17 @@ export const CityHeatmap = ({ darkMode = true }: CityHeatmapProps) => {
                     title="Reset View"
                 >
                     <Target className="w-5 h-5 group-hover/zoom:scale-110 transition-transform" />
+                </button>
+                <button
+                    onClick={toggleFullscreen}
+                    className="w-12 h-12 bg-app-card/80 backdrop-blur-xl border border-app-border rounded-xl flex items-center justify-center text-app-text hover:bg-app-primary hover:text-white transition-all shadow-2xl group/zoom"
+                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                >
+                    {isFullscreen ? (
+                        <Minimize className="w-5 h-5 group-hover/zoom:scale-110 transition-transform" />
+                    ) : (
+                        <Maximize className="w-5 h-5 group-hover/zoom:scale-110 transition-transform" />
+                    )}
                 </button>
                 <div className="flex flex-col bg-app-card/80 backdrop-blur-xl border border-app-border rounded-xl overflow-hidden shadow-2xl">
                     <button
