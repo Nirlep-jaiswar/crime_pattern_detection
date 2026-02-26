@@ -46,7 +46,7 @@ export const BNSIntelligenceHub = () => {
     });
 
     return (
-        <div className="glass-card flex flex-col h-full min-h-[400px]">
+        <div className="glass-card flex flex-col h-[600px]">
             <div className="p-4 border-b border-app-border flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1">
                     <div className="relative flex-1 max-w-md">
