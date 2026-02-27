@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { TrendingUp, Target, PieChart, BarChart2, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { fetchBNSStats } from '../lib/api';
+import Loader from './Loader';
+import DownloadButton from './DownloadButton';
 
 export const AnalyticsPage = () => {
     const [stats, setStats] = React.useState<Record<string, number>>({});
@@ -20,6 +22,14 @@ export const AnalyticsPage = () => {
         };
         loadStats();
     }, []);
+
+    if (loading) {
+        return (
+            <div className="w-full h-[60vh] flex items-center justify-center">
+                <Loader />
+            </div>
+        );
+    }
 
     const sectionsMapping: Record<string, string> = {
         '103': 'BNS 103 (Murder)',
@@ -53,11 +63,9 @@ export const AnalyticsPage = () => {
                     <h1 className="text-2xl font-black text-app-text tracking-tight">System Analytics</h1>
                     <p className="text-sm text-app-text-dim font-medium">Predictive model performance and BNS categorization metrics</p>
                 </div>
-                <div className="flex gap-3">
-                    <div className="px-4 py-2 bg-app-primary rounded-lg text-xs font-black text-white cursor-pointer hover:brightness-110 transition-colors shadow-lg shadow-app-primary/20">
-                        GENERATE REPORT
-                    </div>
-                    <div className="px-4 py-2 bg-app-card rounded-lg text-xs font-black text-app-text-dim cursor-pointer hover:bg-app-background transition-colors border border-app-border">
+                <div className="flex gap-3 items-center">
+                    <DownloadButton text="Generate Report" completedText="Ready" />
+                    <div className="px-4 py-2 bg-app-card rounded-lg text-[9px] font-black text-app-text-dim cursor-pointer hover:bg-app-background transition-colors border border-app-border h-10 flex items-center">
                         FILTERS
                     </div>
                 </div>

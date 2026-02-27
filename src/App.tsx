@@ -9,6 +9,8 @@ import { ResourcesPage } from './components/ResourcesPage';
 import ThemeSwitch from './components/ThemeSwitch';
 import { Shield, Users, MapPin, Activity, Bell, AlertTriangle } from 'lucide-react';
 import { cn } from './lib/utils';
+import PillNav from './components/PillNav';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 // Simple Error Boundary
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
@@ -48,8 +50,11 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 }
 
 function App() {
-    const [activeTab, setActiveTab] = useState('COMMAND');
+    const location = useLocation();
+    const navigate = useNavigate();
     const [darkMode, setDarkMode] = useState(true);
+
+    const activeTab = location.pathname.split('/')[1]?.toUpperCase() || 'COMMAND';
 
     const toggleDarkMode = () => {
         setDarkMode(!darkMode);
@@ -60,41 +65,31 @@ function App() {
         }
     };
 
+    const navItems = [
+        { label: 'COMMAND', href: '/command' },
+        { label: 'SIGNAL', href: '/signal' },
+        { label: 'RISK', href: '/risk' },
+        { label: 'ANALYTICS', href: '/analytics' },
+        { label: 'RESOURCES', href: '/resources' }
+    ];
+
     return (
         <div className="flex h-screen bg-app-background text-app-text overflow-hidden font-sans selection:bg-blue-500/30">
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+            <Sidebar activeTab={activeTab} setActiveTab={(tab) => navigate(`/${tab.toLowerCase()}`)} />
 
             <main className="flex-1 flex flex-col overflow-hidden">
-                {/* Header */}
-                <header className="h-16 border-b border-app-border bg-app-background/80 backdrop-blur-xl px-8 flex items-center justify-between z-20 shrink-0">
+                {/* Header with PillNav */}
+                <header className="h-20 border-b border-app-border bg-app-background/80 backdrop-blur-xl px-8 flex items-center justify-between z-20 shrink-0">
                     <div className="flex items-center gap-8">
-                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('COMMAND')}>
-                            <div className="w-8 h-8 bg-app-primary rounded flex items-center justify-center shadow-lg shadow-blue-500/20">
-                                <Shield className="w-5 h-5 text-white" />
-                            </div>
-                            <h2 className="text-sm font-black tracking-[0.2em] text-app-text uppercase italic">KAVACH 4.0</h2>
-                        </div>
-
-                        <nav className="flex gap-2">
-                            {[
-                                { id: 'COMMAND', label: 'COMMAND' },
-                                { id: 'ANALYTICS', label: 'ANALYTICS' },
-                                { id: 'RESOURCES', label: 'RESOURCES' }
-                            ].map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={cn(
-                                        "text-[10px] font-black tracking-widest px-4 py-1.5 rounded-full transition-all border",
-                                        activeTab === tab.id
-                                            ? "bg-app-primary text-white border-app-primary shadow-md shadow-blue-500/10"
-                                            : "text-app-text-dim border-transparent hover:text-app-text hover:bg-app-card"
-                                    )}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </nav>
+                        <PillNav
+                            logo="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg"
+                            items={navItems}
+                            activeHref={location.pathname}
+                            baseColor={darkMode ? '#1e293b' : '#ffffff'}
+                            pillColor={darkMode ? '#0f172a' : '#f1f5f9'}
+                            pillTextColor={darkMode ? '#94a3b8' : '#475569'}
+                            hoveredPillTextColor={darkMode ? '#ffffff' : '#2563eb'}
+                        />
                     </div>
 
                     <div className="flex items-center gap-6">
@@ -111,53 +106,49 @@ function App() {
 
                 {/* Dashboard Content */}
                 <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar bg-app-background">
-                    {activeTab === 'COMMAND' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                            {/* GIS Heatmap Overlay */}
-                            <div className="w-full">
-                                <CityHeatmap darkMode={darkMode} />
-                            </div>
-
-                            {/* Quick Stats */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <StatCard icon={Shield} label="BNS Sections Tracked" value="482" trend="+12" color="text-blue-500" />
-                                <StatCard icon={Activity} label="Active Inquiries" value="1,240" trend="+5.2%" color="text-amber-500" />
-                                <StatCard icon={Users} label="Personnel On-Duty" value="842" trend="98%" color="text-emerald-500" />
-                                <StatCard icon={MapPin} label="High-Risk Zones" value="14" trend="+2" color="text-rose-500" />
-                            </div>
-
-                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 pb-8">
-                                <div className="xl:col-span-2 space-y-8">
-                                    <BNSIntelligenceHub />
-                                    <CrimeCalendar />
+                    <Routes>
+                        <Route path="/" element={<Navigate to="/command" replace />} />
+                        <Route path="/command" element={
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <div className="w-full">
+                                    <CityHeatmap darkMode={darkMode} />
                                 </div>
-
-                                <div className="space-y-8">
-                                    <PredictiveRiskCalculator />
-
-                                    <div className="glass-card p-6 bg-gradient-to-br from-blue-600/5 to-transparent border-app-border">
-                                        <h3 className="text-[10px] font-black mb-6 flex items-center gap-2 text-app-text-dim uppercase tracking-widest">
-                                            <Bell className="w-4 h-4 text-app-primary" />
-                                            System Operations
-                                        </h3>
-                                        <div className="space-y-5">
-                                            <HealthBar label="Satellite Link (NAV-7)" percent={94} color="bg-emerald-500" />
-                                            <HealthBar label="AI Inference Engine" percent={82} color="bg-blue-500" />
-                                            <HealthBar label="Cloud Sync Latency" percent={12} color="bg-emerald-500" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <StatCard icon={Shield} label="BNS Sections Tracked" value="482" trend="+12" color="text-blue-500" />
+                                    <StatCard icon={Activity} label="Active Inquiries" value="1,240" trend="+5.2%" color="text-amber-500" />
+                                    <StatCard icon={Users} label="Personnel On-Duty" value="842" trend="98%" color="text-emerald-500" />
+                                    <StatCard icon={MapPin} label="High-Risk Zones" value="14" trend="+2" color="text-rose-500" />
+                                </div>
+                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 pb-8">
+                                    <div className="xl:col-span-2 space-y-8">
+                                        <BNSIntelligenceHub />
+                                        <CrimeCalendar />
+                                    </div>
+                                    <div className="space-y-8">
+                                        <PredictiveRiskCalculator />
+                                        <div className="glass-card p-6 bg-gradient-to-br from-blue-600/5 to-transparent border-app-border">
+                                            <h3 className="text-[10px] font-black mb-6 flex items-center gap-2 text-app-text-dim uppercase tracking-widest">
+                                                <Bell className="w-4 h-4 text-app-primary" />
+                                                System Operations
+                                            </h3>
+                                            <div className="space-y-5">
+                                                <HealthBar label="Satellite Link (NAV-7)" percent={94} color="bg-emerald-500" />
+                                                <HealthBar label="AI Inference Engine" percent={82} color="bg-blue-500" />
+                                                <HealthBar label="Cloud Sync Latency" percent={12} color="bg-emerald-500" />
+                                            </div>
+                                            <button className="w-full mt-8 py-2.5 bg-app-card border border-app-border rounded-lg text-[9px] font-black uppercase tracking-[0.2em] hover:bg-app-background transition-colors text-app-text">
+                                                VIEW SYSTEM LOGS
+                                            </button>
                                         </div>
-                                        <button className="w-full mt-8 py-2.5 bg-app-card border border-app-border rounded-lg text-[9px] font-black uppercase tracking-[0.2em] hover:bg-app-background transition-colors text-app-text">
-                                            VIEW SYSTEM LOGS
-                                        </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'SIGNAL' && <BNSIntelligenceHub />}
-                    {activeTab === 'RISK' && <PredictiveRiskCalculator />}
-                    {activeTab === 'ANALYTICS' && <AnalyticsPage />}
-                    {activeTab === 'RESOURCES' && <ResourcesPage />}
+                        } />
+                        <Route path="/signal" element={<BNSIntelligenceHub />} />
+                        <Route path="/risk" element={<PredictiveRiskCalculator />} />
+                        <Route path="/analytics" element={<AnalyticsPage />} />
+                        <Route path="/resources" element={<ResourcesPage />} />
+                    </Routes>
                 </div>
             </main>
 
