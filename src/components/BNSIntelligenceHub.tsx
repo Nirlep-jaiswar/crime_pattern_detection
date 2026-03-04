@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Download, MoreVertical, AlertCircle } from 'lucide-react';
+import { Search, Filter, MoreVertical, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { fetchFIRs } from '../lib/api';
 import Loader from './Loader';
+import DownloadButton from './DownloadButton';
 
 const sectionsMapping: Record<string, string> = {
     '111': 'Organized Crime',
@@ -71,12 +72,10 @@ export const BNSIntelligenceHub = () => {
                     </select>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button className="p-2 bg-app-card hover:bg-app-card/80 rounded-lg transition-colors text-app-text-dim">
+                    <button className="p-2 bg-app-card hover:bg-app-card/80 rounded-lg transition-colors text-app-text-dim h-10 w-10 flex items-center justify-center">
                         <Filter className="w-4 h-4" />
                     </button>
-                    <button className="p-2 bg-app-card hover:bg-app-card/80 rounded-lg transition-colors text-app-text-dim">
-                        <Download className="w-4 h-4" />
-                    </button>
+                    <DownloadButton text="Export" completedText="Done" />
                 </div>
             </div>
 
