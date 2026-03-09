@@ -2,22 +2,22 @@ import React from 'react';
 import styled from 'styled-components';
 
 const Loader = () => {
-    return (
-        <StyledWrapper>
-            <div className="loader">
-                <div className="loader-inner">
-                    <div className="loader-block" />
-                    <div className="loader-block" />
-                    <div className="loader-block" />
-                    <div className="loader-block" />
-                    <div className="loader-block" />
-                    <div className="loader-block" />
-                    <div className="loader-block" />
-                    <div className="loader-block" />
-                </div>
-            </div>
-        </StyledWrapper>
-    );
+  return (
+    <StyledWrapper>
+      <div className="loader">
+        <div className="loader-inner">
+          <div className="loader-block" />
+          <div className="loader-block" />
+          <div className="loader-block" />
+          <div className="loader-block" />
+          <div className="loader-block" />
+          <div className="loader-block" />
+          <div className="loader-block" />
+          <div className="loader-block" />
+        </div>
+      </div>
+    </StyledWrapper>
+  );
 }
 
 const StyledWrapper = styled.div`
@@ -27,6 +27,19 @@ const StyledWrapper = styled.div`
   width: 100%;
   height: 100%;
   min-height: 200px;
+
+  /* Theme-aware variables */
+  --loader-color: #ffffff;
+  --loader-glow: #ffffff;
+  --loader-glow-active: rgba(255, 255, 255, 0.7);
+  --loader-glow-dim: rgba(255, 255, 255, 0.5);
+
+  :root.light & {
+    --loader-color: #1e293b; /* Tactical Slate (Prominent in light mode) */
+    --loader-glow: #1e293b;
+    --loader-glow-active: rgba(30, 41, 59, 0.5);
+    --loader-glow-dim: rgba(30, 41, 59, 0.2);
+  }
 
   .loader {
     display: flex;
@@ -59,8 +72,8 @@ const StyledWrapper = styled.div`
     width: 10px;
     height: 10px;
     margin: 2px;
-    background-color: #fff;
-    box-shadow: 0 0 20px #fff;
+    background-color: var(--loader-color);
+    box-shadow: 0 0 20px var(--loader-glow);
     animation: loader_562 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
   }
 
@@ -99,17 +112,17 @@ const StyledWrapper = styled.div`
   @keyframes loader_562 {
     0% {
       transform: scale(1);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 20px var(--loader-glow-dim);
     }
 
     20% {
       transform: scale(1, 2.5);
-      box-shadow: 0 0 50px rgba(255, 255, 255, 0.7);
+      box-shadow: 0 0 50px var(--loader-glow-active);
     }
 
     40% {
       transform: scale(1);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 20px var(--loader-glow-dim);
     }
   }`;
 
